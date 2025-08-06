@@ -3,7 +3,7 @@
  ["src"]
 
  :dependencies
- []
+ [[lilactown/helix "0.2.0"]]
 
  :builds
  {:app

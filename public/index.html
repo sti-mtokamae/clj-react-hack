@@ -6,8 +6,19 @@
   <link href="/output.css" rel="stylesheet">
   <script src="/js/main.js" defer></script>
 </head>
-<body class="bg-gray-100">
+<body style="background: white; color: black; padding: 20px;">
   <div id="app"></div>
-  <!-- Test Tailwind classes: bg-red-500 p-4 text-white text-2xl text-blue-600 -->
+  <div style="color: blue; font-size: 18px; margin-top: 20px;">
+    HTMLテスト: この青いテキストが見えれば、基本的なHTMLは動作しています。
+  </div>
+  <script>
+    console.log("HTMLページが読み込まれました");
+    setTimeout(() => {
+      const appDiv = document.getElementById('app');
+      if (appDiv && appDiv.innerHTML.trim() === '') {
+        appDiv.innerHTML = '<div style="color: red; font-size: 16px;">ClojureScriptがまだ読み込まれていません...</div>';
+      }
+    }, 2000);
+  </script>
 </body>
 </html>
