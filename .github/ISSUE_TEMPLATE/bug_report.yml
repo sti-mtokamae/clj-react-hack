@@ -1,0 +1,58 @@
+name: Bug Report
+description: バグの報告
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグを報告していただき、ありがとうございます。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起こりましたか？
+      description: バグの詳細な説明をお書きください。
+      placeholder: バグの内容を詳しく説明してください...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どのような動作が期待されますか？
+      placeholder: 期待される動作を説明してください...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を教えてください。
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境情報
+      description: 使用している環境について教えてください。
+      placeholder: |
+        - OS: [例: Windows 11, macOS 13, Ubuntu 20.04]
+        - Node.js version: [例: v18.17.0]
+        - Browser: [例: Chrome 115.0]
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 追加情報
+      description: その他、関連する情報があれば記載してください。
+      placeholder: スクリーンショット、ログ、関連するファイルなど...
