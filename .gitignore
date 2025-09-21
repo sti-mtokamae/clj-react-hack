@@ -27,7 +27,7 @@ Thumbs.db
 *.temp
 
 # ClojureScript specific
-.clj-kondo/.cache/
+.clj-kondo/
 .lsp/
 
 # TailwindCSS binary (if downloaded separately)
