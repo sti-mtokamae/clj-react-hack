@@ -160,6 +160,45 @@ npx shadow-cljs release app
       ($ Button {:onClick #(set-count inc)} "Increment"))))
 ```
 
+## 🔬 UIx ハイブリッド実験（進行中）
+
+### 実験目的
+
+このセクションでは **Helix と UIx の混在アプローチ** を段階的に検証しています。
+
+#### 背景
+- 複数の React islands をシェアド atom で繋ぐ場合、コンポーネント記法の統一が有用か検証
+- Hiccup ベース（UIx）と React 関数型（Helix）の共存は実用的か評価
+- 最終的に `clj-star-bridge` + `clj-react-hack` の monorepo 統合の下準備
+
+#### 仮説
+1. UIx コンポーネント定義と Helix コンポーネント定義は共存可能
+2. atom による状態共有は両方で機能する
+3. 開発体験の差（ビルド・REPL・デバッグ）を定量化できる
+
+### 実装フェーズ
+
+| フェーズ | 対象 | 状態 | 目標 |
+|---------|------|------|------|
+| **Phase 1** | README + Memory | 🔄 進行中 | 実験目的・進捗の記録 |
+| **Phase 2** | shadow-cljs.edn | ⏳ 計画中 | UIx 依存を追加 |
+| **Phase 3** | `card.cljx` | ⏳ 計画中 | UIx コンポーネント実装 |
+| **Phase 4** | `shared-state.cljx` | ⏳ 計画中 | atom で状態定義 |
+| **Phase 5** | 繋ぎの実装 | ⏳ 計画中 | 複数 islands で共有 atom テスト |
+| **Phase 6** | ドキュメント化 | ⏳ 計画中 | 知見の集約 |
+
+### 記録項目
+
+各フェーズで以下を記録：
+- ✅ ビルド時間・エラーの質
+- ✅ REPL hotreload の体験
+- ✅ React DevTools での見え方
+- ✅ 困ったこと・できたこと
+
+### リンク
+- **進捗追跡**: `/memories/session/uix-experiment.md`
+- **ブランチ**: `experiment/helix-uix-hybrid`
+
 ## 🎨 コンポーネント例
 
 ### Buttonコンポーネント

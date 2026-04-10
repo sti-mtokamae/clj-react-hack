@@ -3,13 +3,15 @@
  ["src"]
 
  :dependencies
- [[lilactown/helix "0.2.0"]]
+ [[lilactown/helix "0.2.0"]
+  [com.pitch/uix.core "1.4.5"]
+  [com.pitch/uix.dom "1.4.5"]]
 
  :builds
  {:app
   {:target :browser
    :output-dir "public/js"
    :asset-path "/js"
-   :modules {:main {:init-fn th-tools-ui-hack.core/init}}
+   :modules {:main {:init-fn th-tools-ui-hack.core/render-app}}
    :devtools {:http-root "public"
               :http-port 3000}}}}

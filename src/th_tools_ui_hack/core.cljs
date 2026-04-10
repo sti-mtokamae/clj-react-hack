@@ -2,9 +2,64 @@
   (:require [helix.core :refer [defnc $]]
             [helix.hooks :refer [use-state]]
             [helix.dom :as d]
+            [uix.core :as uix :refer [defui]]
+            [uix.dom]
             ["react-dom/client" :as rdom]))
 
-;; Shadcn/ui風のButtonコンポーネント（シンプル版）
+;; 🔬 実験セクション：複数 islands 間の atom 共有
+
+;; Island A: Counter (Helix + ローカル state)
+(defnc IslandA-Counter []
+  (let [[count set-count] (use-state 0)]
+    (d/div {:style {:border "2px solid #3b82f6" :padding "16px" :border-radius "8px" :margin-bottom "20px" :background "#eff6ff"}}
+      (d/h3 {:style {:color "#1e40af" :margin-top "0"}} "🏝️ Island A: Counter (Helix)")
+      (d/p {:style {:font-size "24px" :font-weight "bold" :color "#1e40af"}}
+        "Count: " count)
+      (d/p {:style {:color "#666" :font-size "12px"}} "ローカル state")
+      (d/button {:onClick #(set-count inc)
+                :style {:padding "8px 16px" :background "#3b82f6" :color "white" :border "none" :border-radius "4px" :cursor "pointer"}}
+        "Increment"))))
+
+;; Island B: Card (Helix)
+(defnc IslandB-Card []
+  (let [[card-text set-card-text] (use-state "初期コンテンツ")]
+    (d/div {:style {:border "2px solid #8b5cf6" :padding "16px" :border-radius "8px" :margin-bottom "20px" :background "#f3e8ff"}}
+      (d/h3 {:style {:color "#8b5cf6" :margin-top "0"}} "📇 Island B: Card (Helix)")
+      (d/p {:style {:color "#666"}}
+        "カード内容:")
+      (d/p {:style {:font-size "14px" :font-weight "bold" :color "#8b5cf6"}}
+        card-text)
+      (d/button {:onClick #(set-card-text (str "Updated at " (.toLocaleTimeString (js/Date.))))
+                :style {:padding "8px 16px" :background "#8b5cf6" :color "white" :border "none" :border-radius "4px" :cursor "pointer"}}
+        "Update Card Content"))))
+
+;; Island C: UIx 正式実装 (defui + uix/use-state)
+(defui IslandC-UIxCardTest []
+  (let [[count set-count!] (uix/use-state 0)]
+    ($ :div {:style {:border "2px solid #059669" :padding "16px" :border-radius "8px" :margin-bottom "20px" :background "#f0fdf4"}}
+      ($ :h3 {:style {:color "#059669" :margin-top "0"}} "🎨 Island C: UIx defui")
+      ($ :p {:style {:color "#666"}} "Official UIx component with defui + $")
+      ($ :div {:style {:border "1px solid #10b981" :border-radius "6px" :padding "12px" :background "white" :margin-top "12px"}}
+        ($ :p {:style {:color "#059669" :font-weight "bold" :margin "0 0 8px 0"}} "UIx Card")
+        ($ :p {:style {:color "#666" :font-size "14px" :margin-bottom "8px"}}
+          "This is UIx defui component")
+        ($ :p {:style {:font-size "12px" :color "#059669" :margin "0"}}
+          (str "Counter: " count)))
+      ($ :button {:onClick #(set-count! inc)
+                  :style {:padding "8px 16px" :background "#059669" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :margin-top "12px"}}
+        "Increment"))))
+
+;; 複数 islands を表示するデモ
+(defnc MultiIslandDemo []
+  (d/div {:style {:margin-bottom "40px"}}
+    (d/h2 {:style {:color "#333"}} "🔬 複数 Islands デモ")
+    (d/p {:style {:color "#666" :line-height "1.6"}}
+      "以下の 3 つの islands は独立した state を持っています。")
+    ($ IslandA-Counter)
+    ($ IslandB-Card)
+    ($ IslandC-UIxCardTest)))
+
+;; オリジナルの App コンポーネント（参考用に残す）
 (defnc ShadcnButton [{:keys [variant size children onClick]}]
   (let [base-classes "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
         variant-classes (case variant
@@ -69,6 +124,9 @@
       (d/div {:style {:color "blue" :margin-bottom "20px"}}
         "🎉 ReactとClojureScriptの統合成功！")
       
+      ;; 複数 islands atom 共有実験セクション
+      ($ MultiIslandDemo)
+      
       ;; インタラクティブデモセクション
       (d/div {:style {:margin-bottom "30px" :padding "20px" :border "2px solid #3b82f6" :border-radius "8px" :background-color "#f8fafc"}}
         (d/h3 {:style {:color "#1e40af" :margin-bottom "15px" :font-size "18px"}}
@@ -116,9 +174,36 @@
           ($ SimpleButton {:variant "secondary"} "Secondary")
           ($ SimpleButton {:variant "ghost"} "Ghost"))))))
 
-(defn init []
-  (let [root-el (.getElementById js/document "app")
-        root (rdom/createRoot root-el)]
-    (.render root ($ App))))
+(defonce root-a (atom nil))
+(defonce root-b (atom nil))
+(defonce root-c (atom nil))
 
-(init)
+(defn render-app []
+  ;; Island A: Helix Counter on #app
+  (let [app-el (.getElementById js/document "app")]
+    (when app-el
+      (if @root-a
+        (.render @root-a ($ IslandA-Counter))
+        (let [new-root (rdom/createRoot app-el)]
+          (reset! root-a new-root)
+          (.render new-root ($ IslandA-Counter))))))
+  
+  ;; Island B: Helix Card on #island-b
+  (let [island-b-el (.getElementById js/document "island-b")]
+    (when island-b-el
+      (if @root-b
+        (.render @root-b ($ IslandB-Card))
+        (let [new-root (rdom/createRoot island-b-el)]
+          (reset! root-b new-root)
+          (.render new-root ($ IslandB-Card))))))
+  
+  ;; Island C: UIx 正式 API で初期化
+  (let [island-c-el (.getElementById js/document "island-c-uix")]
+    (when island-c-el
+      (if @root-c
+        (uix.dom/render-root ($ IslandC-UIxCardTest) @root-c)
+        (let [new-root (uix.dom/create-root island-c-el)]
+          (reset! root-c new-root)
+          (uix.dom/render-root ($ IslandC-UIxCardTest) new-root))))))
+
+(defonce _started (render-app))

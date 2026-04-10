@@ -3,11 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>th-tools-ui-hack</title>
-  <link href="/output.css" rel="stylesheet">
+  <!-- <link href="/output.css" rel="stylesheet"> -->
   <script src="/js/main.js" defer></script>
 </head>
 <body style="background: white; color: black; padding: 20px;">
+  <!-- ヘッダー -->
+  <div style="margin-bottom: 30px;">
+    <h1>🏝️ Helix ✕ UIx Multi-Island Demo</h1>
+    <p style="color: #666; font-size: 14px;">各 island は独立した React root で動作します</p>
+  </div>
+
+  <!-- Island A: Helix Counter -->
   <div id="app"></div>
+
+  <!-- Island B: Helix Card -->
+  <div id="island-b"></div>
+
+  <!-- Island C: UIx Card -->
+  <div id="island-c-uix"></div>
+
   <div style="color: blue; font-size: 18px; margin-top: 20px;">
     HTMLテスト: この青いテキストが見えれば、基本的なHTMLは動作しています。
   </div>
