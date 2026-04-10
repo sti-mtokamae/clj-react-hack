@@ -124,9 +124,6 @@
       (d/div {:style {:color "blue" :margin-bottom "20px"}}
         "🎉 ReactとClojureScriptの統合成功！")
       
-      ;; 複数 islands atom 共有実験セクション
-      ($ MultiIslandDemo)
-      
       ;; インタラクティブデモセクション
       (d/div {:style {:margin-bottom "30px" :padding "20px" :border "2px solid #3b82f6" :border-radius "8px" :background-color "#f8fafc"}}
         (d/h3 {:style {:color "#1e40af" :margin-bottom "15px" :font-size "18px"}}
@@ -174,36 +171,22 @@
           ($ SimpleButton {:variant "secondary"} "Secondary")
           ($ SimpleButton {:variant "ghost"} "Ghost"))))))
 
+(defnc MainContent []
+  (d/div {}
+    ($ App)))
+
 (defonce root-a (atom nil))
 (defonce root-b (atom nil))
 (defonce root-c (atom nil))
 
 (defn render-app []
-  ;; Island A: Helix Counter on #app
+  ;; Main content: Islands demo + App demo on #app
   (let [app-el (.getElementById js/document "app")]
     (when app-el
       (if @root-a
-        (.render @root-a ($ IslandA-Counter))
+        (.render @root-a ($ MainContent))
         (let [new-root (rdom/createRoot app-el)]
           (reset! root-a new-root)
-          (.render new-root ($ IslandA-Counter))))))
-  
-  ;; Island B: Helix Card on #island-b
-  (let [island-b-el (.getElementById js/document "island-b")]
-    (when island-b-el
-      (if @root-b
-        (.render @root-b ($ IslandB-Card))
-        (let [new-root (rdom/createRoot island-b-el)]
-          (reset! root-b new-root)
-          (.render new-root ($ IslandB-Card))))))
-  
-  ;; Island C: UIx 正式 API で初期化
-  (let [island-c-el (.getElementById js/document "island-c-uix")]
-    (when island-c-el
-      (if @root-c
-        (uix.dom/render-root ($ IslandC-UIxCardTest) @root-c)
-        (let [new-root (uix.dom/create-root island-c-el)]
-          (reset! root-c new-root)
-          (uix.dom/render-root ($ IslandC-UIxCardTest) new-root))))))
+          (.render new-root ($ MainContent))))))
 
 (defonce _started (render-app))

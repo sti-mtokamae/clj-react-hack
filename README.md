@@ -180,12 +180,28 @@ npx shadow-cljs release app
 
 | フェーズ | 対象 | 状態 | 目標 |
 |---------|------|------|------|
-| **Phase 1** | README + Memory | 🔄 進行中 | 実験目的・進捗の記録 |
-| **Phase 2** | shadow-cljs.edn | ⏳ 計画中 | UIx 依存を追加 |
-| **Phase 3** | `card.cljx` | ⏳ 計画中 | UIx コンポーネント実装 |
-| **Phase 4** | `shared-state.cljx` | ⏳ 計画中 | atom で状態定義 |
-| **Phase 5** | 繋ぎの実装 | ⏳ 計画中 | 複数 islands で共有 atom テスト |
-| **Phase 6** | ドキュメント化 | ⏳ 計画中 | 知見の集約 |
+| **Phase 1** | README + Memory | ✅ 完了 | 実験目的・進捗の記録、islands表現統一 |
+| **Phase 2** | shadow-cljs.edn | ✅ 完了 | UIx 依存を追加 |
+| **Phase 3** | UIx コンポーネント実装 | ✅ 完了 | Island C で defui + uix/use-state 実装 |
+| **Phase 4** | 複数 islands 統合 | ✅ 完了 | Helix + UIx ハイブリッド構成で動作検証 |
+| **Phase 5** | UI デモ復帰 | ✅ 完了 | shadcn/ui + TailwindCSS ボタンテスト復帰 |
+| **Phase 6** | ドキュメント化 | 🔄 進行中 | 知見の集約・実装結果の記録 |
+
+### 検証結果
+
+✅ **UIx は Helix と共存可能**
+- 同一アプリケーション内で両方のコンポーネント定義が機能
+- `uix.dom/create-root` + `uix.dom/render-root` API を使用
+- フラグメント記法は Helix の `($ :<> ...)` ではなく通常の div で対応
+
+✅ **ホットリロード対応**
+- shadow-cljs watch mode で両フレームワークをリアルタイムコンパイル
+- ファイル変更が即座に反映
+
+⚠️ **実装上の学び**
+- UIx と Helix は namespace aliasing で共存（どちらも `$` を export）
+- UIx の `defui` マクロは正式コンポーネント定義に必須
+- 複数 roots の管理は atom ベースで容易に実装可能
 
 ### 記録項目
 
