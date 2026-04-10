@@ -17,6 +17,7 @@
 - ✅ **React 19** - 最新のReactバージョンwith Concurrent Features
 - ✅ **ClojureScript** - 関数型プログラミングでフロントエンド開発
 - ✅ **Helix** - ClojureScript ↔ React のエレガントな統合
+- ✅ **UIx** - Hiccup ベースの React コンポーネント定義（Helix との共存対応）
 - ✅ **Shadow-CLJS** - 高速ビルドとホットリロード
 - ✅ **TailwindCSS** - ユーティリティファーストCSS
 - ✅ **Shadcn/ui風** - プロフェッショナルなデザインシステム
@@ -40,6 +41,7 @@
 | **ClojureScript** | latest | 関数型プログラミング言語 | 不変データ構造、簡潔な構文 |
 | **React** | 19.1.1 | UIフレームワーク | Concurrent Features、最新hooks |
 | **Helix** | 0.2.0 | ClojureScript ↔ React統合 | 型安全、関数型React開発 |
+| **UIx** | 1.4.5 | Hiccup ベース React コンポーネント | Helix との共存対応、defui マクロ |
 | **TailwindCSS** | 4.1.11 | ユーティリティファーストCSS | 高速スタイリング、レスポンシブ |
 | **Shadow-CLJS** | 3.1.8 | ClojureScriptビルドツール | 高速コンパイル、ホットリロード |
 | **Class Variance Authority** | 0.7.1 | コンポーネントバリアント管理 | 型安全なスタイルバリアント |
