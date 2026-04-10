@@ -1,10 +1,11 @@
-# 🚀 th-tools-ui-hack
+# 🚀 clj-react-hack (Helix ✕ UIx Hybrid)
 
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 [![ClojureScript](https://img.shields.io/badge/ClojureScript-latest-5881d8.svg?logo=clojure&logoColor=white)](https://clojurescript.org/)
 [![React](https://img.shields.io/badge/React-19.1.1-61dafb.svg?logo=react&logoColor=white)](https://reactjs.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.11-38bdf8.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Helix](https://img.shields.io/badge/Helix-0.2.0-brightgreen.svg)](https://github.com/lilactown/helix)
+[![UIx](https://img.shields.io/badge/UIx-1.4.5-32a852.svg)](https://github.com/pitch-io/uix)
 [![Shadow-CLJS](https://img.shields.io/badge/Shadow--CLJS-3.1.8-success.svg)](https://shadow-cljs.github.io/docs/UsersGuide.html)
 
 > **Modern ClojureScript + React 19 Development Environment with Shadcn/ui Design System**  
@@ -57,8 +58,8 @@
 ### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/sti-pd-sandbox/th-tools-ui-hack.git
-cd th-tools-ui-hack
+git clone https://github.com/sti-mtokamae/clj-react-hack.git
+cd clj-react-hack
 ```
 
 ### 2. 依存関係のインストール
@@ -87,7 +88,7 @@ npx shadow-cljs watch app
 ## 📁 プロジェクト構造
 
 ```
-th-tools-ui-hack/
+clj-react-hack/
 ├── 📁 src/
 │   ├── 📁 css/
 │   │   └── 📄 input.css          # TailwindCSS入力ファイル
@@ -288,7 +289,7 @@ module.exports = {
  {:app
   {:target :browser
    :output-dir "public/js"
-   :modules {:main {:init-fn th-tools-ui-hack.core/init}}
+   :modules {:main {:init-fn th-tools-ui-hack.core/render-app}}
    :devtools {:http-root "public" :http-port 3000}}}}
 ```
 
