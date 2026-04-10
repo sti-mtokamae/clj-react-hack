@@ -29,6 +29,10 @@
 - **Utility Functions** - クラス名マージとスタイリング機能
 
 ### 🎮 **インタラクティブデモ**
+- **🏝️ Islands デモ** - Helix ✕ UIx ハイブリッド構成の実演
+  - Island A: Counter (Helix) - use-state による状態管理
+  - Island B: Card (Helix) - 複数コンポーネントの統合
+  - Island C: UIx defui - Hiccup シンタックスの React 統合
 - **🚀 ライブカウンターデモ** - 状態管理の実演
 - **🎨 多段階ボタンスタイル** - 3つの異なるアプローチ
 - **⚡ ホットリロード** - 瞬時の開発フィードバック
