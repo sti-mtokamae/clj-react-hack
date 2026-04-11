@@ -187,6 +187,48 @@ npx shadow-cljs release app
       ($ Button {:onClick #(set-count inc)} "Increment"))))
 ```
 
+**UIx hooks** を使用したローカル状態管理（同じく React hooks を活用）：
+
+```clojure
+(defui CounterUIx []
+  (let [[count set-count!] (uix/use-state 0)]
+    ($ :div {}
+      ($ :p {} (str "Count: " count))
+      ($ :button {:onClick #(set-count! inc)} "Increment"))))
+```
+
+> **注**: Helix と UIx は異なるマクロ（`defnc` vs `defui`）を使用しますが、**両者とも同じ React Hooks API** を活用します。`use-state` の参照方法が異なる点（`use-state` vs `uix/use-state`）に注意してください。
+
+### Islands アーキテクチャ戦略
+
+このプロジェクトでは **複数の独立した React islands** を採用しています：
+
+**Island アプローチのメリット:**
+- 各Islandは完全に独立した React root を持つ
+- 異なるフレームワーク（Helix ↔ UIx）の混在が可能
+- 各Islandが独自の state を管理（`use-state` / `uix/use-state`）
+- 必要に応じて Clojure atoms 経由で state を共有可能
+
+**実装例:**
+```clojure
+;; 共有 state（atom を使用）
+(defonce shared-state (atom {:count 0}))
+
+;; Island A: Helix - ローカル state の独立管理
+(defnc IslandA [] ...)
+
+;; Island B: Helix - ローカル state の独立管理
+(defnc IslandB [] ...)
+
+;; Island C: UIx - ローカル state の独立管理
+(defui IslandC [] ...)
+
+;; 必要に応じて atom で state を共有
+;; @shared-state で読み取り、reset! で更新
+```
+
+> **本プロジェクトの現状**: Island A・B・C は各々独立した state を持っており、atom による共有は実装していません。必要に応じてこの戦略は拡張可能です。
+
 ## 🔬 UIx ハイブリッド実験（進行中）
 
 ### 実験目的
@@ -375,5 +417,5 @@ npx shadow-cljs compile test
 
 ---
 
-**開発者**: [sti-pd-sandbox](https://github.com/sti-pd-sandbox)  
-**プロジェクト開始**: 2025年8月
+**開発者**: [sti-mtokamae](https://github.com/sti-mtokamae)  
+**プロジェクト開始**: 2026年4月
