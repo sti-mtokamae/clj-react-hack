@@ -1,4 +1,4 @@
-(ns th-tools-ui-hack.core
+(ns clj-react-hack.core
   (:require [helix.core :refer [defnc $]]
             [helix.hooks :refer [use-state]]
             [helix.dom :as d]
@@ -173,6 +173,7 @@
 
 (defnc MainContent []
   (d/div {}
+    ($ MultiIslandDemo)
     ($ App)))
 
 (defonce root-a (atom nil))
@@ -187,6 +188,6 @@
         (.render @root-a ($ MainContent))
         (let [new-root (rdom/createRoot app-el)]
           (reset! root-a new-root)
-          (.render new-root ($ MainContent))))))
+          (.render new-root ($ MainContent)))))))
 
 (defonce _started (render-app))

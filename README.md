@@ -96,7 +96,7 @@ clj-react-hack/
 ├── 📁 src/
 │   ├── 📁 css/
 │   │   └── 📄 input.css          # TailwindCSS入力ファイル
-│   └── 📁 th_tools_ui_hack/
+│   └── 📁 clj_react_hack/
 │       └── 📄 core.cljs          # メインアプリケーションファイル
 ├── 📁 public/
 │   ├── 📄 index.html             # HTMLエントリーポイント
@@ -112,7 +112,7 @@ clj-react-hack/
 
 ### コード編集
 
-- **ClojureScript**: `src/th_tools_ui_hack/` ディレクトリでコンポーネントとロジックを編集
+- **ClojureScript**: `src/clj_react_hack/` ディレクトリでコンポーネントとロジックを編集
 - **スタイル**: `src/css/input.css` でカスタムCSSとTailwindディレクティブを編集
 - **HTML**: `public/index.html` でベースHTMLテンプレートを編集
 
@@ -293,7 +293,7 @@ module.exports = {
  {:app
   {:target :browser
    :output-dir "public/js"
-   :modules {:main {:init-fn th-tools-ui-hack.core/render-app}}
+   :modules {:main {:init-fn clj-react-hack.core/render-app}}
    :devtools {:http-root "public" :http-port 3000}}}}
 ```
 
