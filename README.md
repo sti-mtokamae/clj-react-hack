@@ -123,7 +123,27 @@ clj-react-hack/
 ### デバッグ
 
 - **REPL**: Shadow-CLJSダッシュボード（http://localhost:9630/dashboard）でREPLに接続
-- **ブラウザDevTools**: React Developer Toolsが利用可能
+- **ブラウザDevTools**: 標準のブラウザ開発者ツール（F12）で JavaScript、DOM を検査
+- **React Developer Tools**: ブラウザ拡張（Chrome/Firefox）で React コンポーネント構造を可視化
+
+#### React Developer Tools の使い方
+1. **インストール**:
+   - [Chrome拡張](https://chrome.google.com/webstore/detail/react-developer-tools)
+   - [Firefox アドオン](https://addons.mozilla.org/firefox/addon/react-devtools/)
+
+2. **DevTools を開く**:
+   - F12 → 右上のタブを確認 → 「Components」タブを選択
+   - またはコンソールで右クリック → `Inspect` を選択
+
+3. **Component ツリーでの検査**:
+   - コンポーネント階層を左パネルで閲覧
+   - コンポーネント選択 → 右パネルで **Props** / **Hooks** / **State** を確認
+   - 例：`IslandA-Counter` の `count` state の値がリアルタイム表示
+
+4. **Profiler タブ**:
+   - パフォーマンス計測
+   - コンポーネントのレンダリング時間を分析
+   - 不要な再レンダリング検出
 
 ## 🏗️ ビルドとデプロイ
 
