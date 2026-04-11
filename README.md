@@ -91,8 +91,6 @@ npx shadow-cljs watch app
 
 ## 📁 プロジェクト構造
 
-## 📁 プロジェクト構造
-
 ```
 clj-react-hack/
 ├── 📁 src/
@@ -314,14 +312,14 @@ module.exports = {
 npx shadow-cljs compile test
 ```
 
-## � 謝辞
+## 💝 謝辞
 
 - **[Helix](https://github.com/lilactown/helix)** - 優秀なClojureScript React ラッパー
 - **[Shadcn/ui](https://ui.shadcn.com/)** - デザインシステムのインスピレーション
 - **[TailwindCSS](https://tailwindcss.com/)** - ユーティリティファーストCSSフレームワーク
 - **[Shadow-CLJS](https://shadow-cljs.github.io/)** - 優れたClojureScriptビルドツール
 
-## �📝 参考資料
+## 📚 参考資料
 
 ### 公式ドキュメント
 - [ClojureScript公式ドキュメント](https://clojurescript.org/)
@@ -342,18 +340,8 @@ npx shadow-cljs compile test
 
 ---
 
-**Built with ❤️ using ClojureScript + React 19 + Helix + TailwindCSS**  
-**❤️で作られました ClojureScript + React 19 + Helix + TailwindCSS**
-- [React 19 ドキュメント](https://react.dev/)
-- [TailwindCSS ドキュメント](https://tailwindcss.com/docs)
-
-## 🤝 コントリビューション
-
-1. このリポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+**Built with ❤️ using ClojureScript + React 19 + Helix + UIx + TailwindCSS**  
+**❤️で作られました ClojureScript + React 19 + Helix + UIx + TailwindCSS**
 
 ## 📄 ライセンス
 
