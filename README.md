@@ -262,6 +262,73 @@ npx shadow-cljs release app
 
 > **本戦略の効果**: Shadow-CLJS のモジュール分割 + Islands アプローチで、**SPA の肥大化課題を構造的に回避できます**。
 
+#### 認証認可（Authentication / Authorization）の島間連携
+
+**Islands 環境での認証管理戦略:**
+
+| アプローチ | 方式 | メリット | デメリット |
+|-----------|------|---------|-----------|
+| **共有 Atom** | 全島が同一 atom 参照 | 単純、即座に同期 | 結合度が高い |
+| **localStorage + Pub/Sub** | localStorage + イベント通知 | 疎結合、永続化可能 | 同期タイミング课題 |
+| **バックエンド セッション** | サーバー側管理、API 認証 | 最も堅牢、CSRF対策可能 | サーバー負荷増加 |
+| **JWT + LocalStorage** | JWT トークンを localStorage | ステートレス、スケーラブル | XSS リスク |
+| **Context API + Pub/Sub** | React Context + イベント | React ネイティブ | 複数 root では複雑 |
+
+**推奨パターン（本プロジェクトへの適用例）:**
+
+```clojure
+;; 共有認証状態（atom）
+(defonce auth-state (atom {:user nil :token nil :authenticated? false}))
+
+;; 認証変更イベント（島間通知）
+(defonce auth-events (atom []))
+
+;; Island A: ログインフォーム
+(defnc IslandA-Login []
+  (let [[email set-email] (use-state "")]
+    (d/button {:onClick #(do
+                          ;; バックエンド認証
+                          (js/fetch "/api/login" {:method "POST" :body (js/JSON.stringify {:email @email})})
+                          ;; 認証状態更新
+                          (reset! auth-state {:user email :authenticated? true})
+                          ;; イベント通知
+                          (swap! auth-events conj {:type :login :user email}))}
+      "Login")))
+
+;; Island B: ユーザー情報表示
+(defnc IslandB-UserProfile []
+  (let [user (:user @auth-state)]
+    (d/div {}
+      (if user
+        (d/p {} (str "Logged in as: " user))
+        (d/p {} "Not logged in")))))
+
+;; Island C: ログアウト
+(defui IslandC-Logout []
+  (let [authenticated? (:authenticated? @auth-state)]
+    ($ :button {:onClick #(do
+                           (reset! auth-state {:user nil :authenticated? false})
+                           (swap! auth-events conj {:type :logout}))}
+      (if authenticated? "Logout" "Log in first"))))
+```
+
+**実装上の注意点:**
+
+1. **認証 token の保安**:
+   - localStorage は XSS 脆弱性がある
+   - HttpOnly Cookie が理想的
+   - バックエンド検証は必須
+
+2. **島間同期**:
+   - atom の変更は即座に全島に反映
+   - Pub/Sub イベントで確実な通知を保証
+
+3. **タイムアウト処理**:
+   - 各島が独立してタイムアウト判定しないこと
+   - 中央（atom）で管理
+
+> **推奨戦略**: **バックエンド session + 共有 atom（ローカルキャッシュ）** の組み合わせ。認証の信頼性とパフォーマンスのバランスが最適です。
+
 ## 🔬 UIx ハイブリッド実験（進行中）
 
 ### 実験目的
