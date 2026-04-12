@@ -97,7 +97,15 @@ clj-react-hack/
 │   ├── 📁 css/
 │   │   └── 📄 input.css          # TailwindCSS入力ファイル
 │   └── 📁 clj_react_hack/
-│       └── 📄 core.cljs          # メインアプリケーションファイル
+│       ├── 📄 core.cljs          # メインアプリケーション（Islands mount + Button デモ）
+│       ├── 📄 shared_state.cljs  # 共有状態管理（atom）
+│       └── 📁 components/        # コンポーネント分割ディレクトリ
+│           ├── 📁 island_a/
+│           │   └── 📄 core.cljs  # Island A: Counter (Helix)
+│           ├── 📁 island_b/
+│           │   └── 📄 core.cljs  # Island B: Card (Helix)
+│           └── 📁 island_c/
+│               └── 📄 core.cljs  # Island C: UIx Card Test
 ├── 📁 public/
 │   ├── 📄 index.html             # HTMLエントリーポイント
 │   ├── 📄 output.css             # 生成されたCSS（自動生成）
@@ -288,6 +296,7 @@ npx shadow-cljs release app
 | **Phase 4** | 複数 islands 統合 | ✅ 完了 | Helix + UIx ハイブリッド構成で動作検証 |
 | **Phase 5** | UI デモ復帰 | ✅ 完了 | shadcn/ui + TailwindCSS ボタンテスト復帰 |
 | **Phase 6** | ドキュメント化・検証完全化 | ✅ 完了 | 知見の集約・実装結果の記録・UIx 検証完全化 |
+| **Phase 7** | コンポーネント分割・alias 規範化 | ✅ 完了 | Island ファイル化、namespace alias 明示化、保守性向上 |
 
 ### 検証結果
 
@@ -320,21 +329,74 @@ npx shadow-cljs release app
 
 ### 🔧 UIx × Helix 共存実装ガイド
 
-#### Namespace 設定（重要）
-```clojure
-;; 現在: Helix の $ がメイン（動作実績あり）
-;; 目標: UIx への段階的移行（新規 defui は UIx で記述）
-(ns my.app
-  (:require [helix.core :refer [defnc $]]
-            [helix.dom :as d]
-            [uix.core :as uix :refer [defui]]
-            [uix.dom]))
+#### Phase 7: コンポーネント分割・Namespace alias 規範化
+
+**本プロジェクトの Phase 7 で実装された構造：**
+
+```
+src/clj_react_hack/
+├── core.cljs                   ← メインアプリケーション（Island mount）
+├── shared_state.cljs           ← 共有状態管理（atom）
+└── components/
+    ├── island_a/core.cljs      ← Helix 専用
+    │   (:require [helix.core :as helix :refer [defnc]]
+    │              [helix.dom :as d] ...)
+    ├── island_b/core.cljs      ← Helix 専用
+    │   (:require [helix.core :as helix :refer [defnc]] ...)
+    └── island_c/core.cljs      ← UIx 専用
+        (:require [uix.core :as uix :refer [defui]] ...)
 ```
 
-> **移行戦略**: 
-> - 既存の Helix コンポーネント（`defnc`）は `$` で実装継続
-> - 新規 UIx コンポーネント（`defui`）は `uix/$` で明示的に指定
-> - 段階的に UIx へ移行可能（フレームワーク選出は不要）
+**コンポーネント分割のメリット：**
+- ✅ **物理的独立性**: 各 Island が独立したファイル（互いに呼び出さない）
+- ✅ **Namespace 明示化**: `helix/$` / `uix/$` で framework を明示
+- ✅ **保守性向上**: ファイル移動・拡張が容易
+- ✅ **スケーラビリティ**: Island 追加時に既存コードへの影響なし
+- ✅ **段階的移行**: IslandA・B は Helix 保持、IslandC は UIx、新規は UIx で統一可能
+
+**実装上のポイント：**
+```clojure
+;;島_A (Helix 専用)
+(ns clj-react-hack.components.island-a.core
+  (:require [helix.core :as helix :refer [defnc]]
+            [helix.dom :as d]))
+(defnc IslandA []
+  (helix/$ :div {} ...))  ; ← helix/$ で明示化
+
+;; 島_C (UIx 専用)
+(ns clj-react-hack.components.island-c.core
+  (:require [uix.core :as uix :refer [defui]]))
+(defui IslandC []
+  (uix/$ :div {} ...))    ; ← uix/$ で明示化
+```
+
+**atom による state 共有（拡張可能）：**
+```clojure
+;; shared_state.cljs
+(defonce app-state (atom {:message "初期状態"}))
+
+;; 各 Island で watch して連携
+;; (add-watch app-state :key (fn [k a old new] ...))
+```
+
+#### Namespace 設定（重要）
+```clojure
+;; 現在: Phase 7 版（alias 明示化）
+(ns clj-react-hack.core
+  (:require [helix.core :as helix :refer [defnc]]
+            [uix.core :as uix :refer [defui]]))
+
+;; Helix コンポーネント参照
+(helix/$ IslandA)
+
+;; UIx コンポーネント参照
+(helix/$ IslandC)
+```
+
+> **Phase 7 の成果**: 
+> - Namespace alias により、framework の選択が明示的
+> - ファイル分割で物理的に独立した構造を実現
+> - 既存動作実績を保護しながら UIx への段階的移行が可能
 
 #### UIx コンポーネント内での $ 使用
 UIx は主軸なので、`defui` マクロ内は **すべて `uix/$`** で統一：
