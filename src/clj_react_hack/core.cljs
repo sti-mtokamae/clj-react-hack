@@ -6,7 +6,45 @@
             [uix.dom]
             ["react-dom/client" :as rdom]))
 
-;; 🔬 実験セクション：複数 islands 間の atom 共有
+;; ========================================
+;; UIx コンポーネント（shadcn/ui スタイル対応）
+;; ========================================
+
+;; UIx Button コンポーネント（デバッグ版）
+(defui UIxButton [props]
+  (let [on-click (:onClick props)
+        variant (:variant props)
+        children (:children props)
+        base-classes "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        variant-classes (case variant
+                         "destructive" "bg-red-600 text-white hover:bg-red-700"
+                         "outline" "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                         "secondary" "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                         "ghost" "text-gray-700 hover:bg-gray-100"
+                         "link" "text-blue-600 underline-offset-4 hover:underline"
+                         ;; default
+                         "bg-blue-600 text-white hover:bg-blue-700")
+        all-classes (str base-classes " " variant-classes " h-10 px-4 py-2 shadow")]
+    ($ :button {:className all-classes :on-click on-click} children)))
+
+;; UIx Card コンポーネント
+(defui UIxCard [{:keys [title description footer children]}]
+  ($ :div {:style {:border "1px solid #e5e7eb" :border-radius "8px" :background "white" :box-shadow "0 1px 3px 0 rgba(0, 0, 0, 0.1)" :overflow "hidden"}}
+    ($ :div {:style {:padding "16px" :border-bottom "1px solid #f3f4f6"}}
+      (when title
+        ($ :h3 {:style {:margin "0 0 8px 0" :color "#1f2937" :font-weight "600" :font-size "16px"}} title))
+      (when description
+        ($ :p {:style {:margin "0" :color "#6b7280" :font-size "14px"}} description)))
+    (when children
+      ($ :div {:style {:padding "16px"}}
+        children))
+    (when footer
+      ($ :div {:style {:padding "16px" :background "#f9fafb" :border-top "1px solid #f3f4f6"}}
+        footer))))
+
+;; ========================================
+;; 🔬 実験セクション：複数 islands 間の state 管理
+;; ========================================
 
 ;; Island A: Counter (Helix + ローカル state)
 (defnc IslandA-Counter []
@@ -33,21 +71,55 @@
                 :style {:padding "8px 16px" :background "#8b5cf6" :color "white" :border "none" :border-radius "4px" :cursor "pointer"}}
         "Update Card Content"))))
 
-;; Island C: UIx 正式実装 (defui + uix/use-state)
+;; Island C: UIx 正式実装（複雑なコンポーネント構成、TailwindCSS 統合、複数子要素）
 (defui IslandC-UIxCardTest []
-  (let [[count set-count!] (uix/use-state 0)]
+  (let [[count set-count!] (uix/use-state 0)
+        [card-content set-card-content!] (uix/use-state "初期カード内容")]
     ($ :div {:style {:border "2px solid #059669" :padding "16px" :border-radius "8px" :margin-bottom "20px" :background "#f0fdf4"}}
-      ($ :h3 {:style {:color "#059669" :margin-top "0"}} "🎨 Island C: UIx defui")
-      ($ :p {:style {:color "#666"}} "Official UIx component with defui + $")
-      ($ :div {:style {:border "1px solid #10b981" :border-radius "6px" :padding "12px" :background "white" :margin-top "12px"}}
-        ($ :p {:style {:color "#059669" :font-weight "bold" :margin "0 0 8px 0"}} "UIx Card")
-        ($ :p {:style {:color "#666" :font-size "14px" :margin-bottom "8px"}}
-          "This is UIx defui component")
-        ($ :p {:style {:font-size "12px" :color "#059669" :margin "0"}}
-          (str "Counter: " count)))
-      ($ :button {:onClick #(set-count! inc)
-                  :style {:padding "8px 16px" :background "#059669" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :margin-top "12px"}}
-        "Increment"))))
+      ($ :h3 {:style {:color "#059669" :margin-top "0"}} "🎨 Island C: UIx defui（複雑な構成）")
+      ($ :p {:style {:color "#666" :font-size "14px" :margin "8px 0"}} 
+        "UIx defui + 複数子コンポーネント + state 管理統合デモ")
+      
+      ;; UIx Card 構造（inline、複数の子要素統合）
+      ($ :div {:style {:border "1px solid #e5e7eb" :border-radius "8px" :background "white" :box-shadow "0 1px 3px 0 rgba(0, 0, 0, 0.1)" :overflow "hidden" :margin-top "12px"}}
+        ;; Card Header
+        ($ :div {:style {:padding "16px" :border-bottom "1px solid #f3f4f6"}}
+          ($ :h4 {:style {:margin "0 0 8px 0" :color "#1f2937" :font-weight "600" :font-size "16px"}} 
+            "🛠️ UIx Card デモ")
+          ($ :p {:style {:margin "0" :color "#6b7280" :font-size "14px"}} 
+            "UIx defui で複雑なコンポーネント構成をテスト"))
+        
+        ;; Card Body
+        ($ :div {:style {:padding "16px"}}
+          ($ :div {:style {:margin-bottom "16px"}}
+            ($ :div {:style {:font-weight "600" :color "#1f2937" :margin-bottom "8px"}} 
+              (str "🔢 カウンター: " count))
+            ($ :div {:style {:color "#6b7280" :font-size "14px" :margin-bottom "12px"}}
+              card-content)
+            
+            ;; UIx Button コンポーネント群（複数バリエーション）
+            ;; デバッグ：インライン定義（UIxButton コンポーネント経由ではなく直接 button 要素）
+            ($ :div {:style {:display "flex" :gap "8px" :flex-wrap "wrap" :margin-bottom "12px"}}
+              ($ :button {:on-click #(set-count! inc)
+                         :style {:padding "8px 16px" :background "#3b82f6" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :font-weight "500"}}
+                "➕ Increment")
+              ($ :button {:on-click #(set-count! dec)
+                         :style {:padding "8px 16px" :background "#8b5cf6" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :font-weight "500"}}
+                "➖ Decrement")
+              ($ :button {:on-click #(set-count! (constantly 0))
+                         :style {:padding "8px 16px" :background "#6b7280" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :font-weight "500"}}
+                "🔄 Reset"))
+            
+            ;; テキスト更新ボタン
+            ($ :button 
+              {:on-click #(set-card-content! (str "Updated: " (.toLocaleTimeString (js/Date.))))
+               :style {:padding "8px 16px" :background "#059669" :color "white" :border "none" :border-radius "4px" :cursor "pointer" :font-weight "500" :margin-top "8px"}}
+              "📝 Update Card Content")))
+        
+        ;; Card Footer
+        ($ :div {:style {:padding "16px" :background "#f9fafb" :border-top "1px solid #f3f4f6" :font-size "12px" :color "#6b7280"}}
+          "✅ UIx + TailwindCSS 統合テスト")))))
+
 
 ;; 複数 islands を表示するデモ
 (defnc MultiIslandDemo []
@@ -58,6 +130,10 @@
     ($ IslandA-Counter)
     ($ IslandB-Card)
     ($ IslandC-UIxCardTest)))
+
+;; ========================================
+;; Helix コンポーネント（既存、参考用）
+;; ========================================
 
 ;; オリジナルの App コンポーネント（参考用に残す）
 (defnc ShadcnButton [{:keys [variant size children onClick]}]
