@@ -379,45 +379,70 @@ src/clj_react_hack/
 ;; (add-watch app-state :key (fn [k a old new] ...))
 ```
 
-#### Namespace 設定（重要）
+#### コンポーネント定義方式（Phase 7 完成版）
+
+**UIx 統一版（core.cljs - メインアプリケーション）:**
 ```clojure
-;; 現在: Phase 7 版（alias 明示化）
+;; ✅ Phase 7 完成版：core.cljs は完全 UIx 統一化
 (ns clj-react-hack.core
+  (:require [helix.core :as helix]              ; ← IslandA・B 呼び出し用のみ
+            [uix.core :as uix :refer [defui]]   ; ← メイン定義すべて UIx
+            ...))
+
+;; メインレイアウト：すべて defui（UIx）
+(defui MultiIslandDemo []
+  (uix/$ :div {}
+    (uix/$ :h2 {} "複数 Islands デモ")
+    (helix/$ IslandA-Counter)      ; ← Helix 島呼び出し：helix/$ で明示
+    (helix/$ IslandB-Card)
+    (uix/$ IslandC-UIxCardTest)    ; ← UIx 島呼び出し：uix/$ で明示
+  ))
+
+;; ボタンデモ：すべて defui（UIx）
+(defui ButtonDemo []
+  (let [[count set-count!] (uix/use-state 0)]
+    (uix/$ :div {}
+      (uix/$ ShadcnButton {:variant "default" :onClick #(set-count! inc)} "➕")
+      (uix/$ TailwindButton {} "Tail")
+      (uix/$ SimpleButton {} "Simple")
+    )))
+
+;; ボタンコンポーネント：すべて defui（UIx）
+(defui ShadcnButton [{:keys [variant size children onClick]}] ...)
+(defui TailwindButton [{:keys [variant children onClick]}] ...)
+(defui SimpleButton [{:keys [variant children onClick]}] ...)
+```
+
+**Helix 島（parts/island_a/core.cljs）- Helix 専用保持：**
+```clojure
+;; ← Helix 専用：defnc + helix.dom
+(ns clj-react-hack.components.island-a.core
   (:require [helix.core :as helix :refer [defnc]]
-            [uix.core :as uix :refer [defui]]))
+            [helix.dom :as d]))
 
-;; Helix コンポーネント参照
-(helix/$ IslandA)
-
-;; UIx コンポーネント参照
-(helix/$ IslandC)
+(defnc IslandA-Counter []
+  (let [[count set-count] (use-state 0)]
+    (d/div {}
+      (d/button {:onClick #(set-count inc)} "+"))))
 ```
 
-> **Phase 7 の成果**: 
-> - Namespace alias により、framework の選択が明示的
-> - ファイル分割で物理的に独立した構造を実現
-> - 既存動作実績を保護しながら UIx への段階的移行が可能
-
-#### UIx コンポーネント内での $ 使用
-UIx は主軸なので、`defui` マクロ内は **すべて `uix/$`** で統一：
-
+**UIx 島（components/island_c/core.cljs）- UIx 専用：**
 ```clojure
-;; ✅ 正しい（UIx 主軸）：uix/$ を明示的に使用
-(defui UIxButton [{:keys [on-click children]}]
-  (uix/$ :button {:on-click on-click} children))
+;; ← UIx 専用：defui + uix/$
+(ns clj-react-hack.components.island-c.core
+  (:require [uix.core :as uix :refer [defui]]))
 
-;; Helix は互換用：defnc で定義し Helix $ を使用
-(defnc HelixButton [{:keys [on-click children]}]
-  ($ :button {:on-click on-click} children))
-```
-
-#### Island C（UIx）での実装例
-```clojure
-;; UIx が主軸：新規コンポーネント実装の基本
 (defui IslandC-UIxCardTest []
   (let [[count set-count!] (uix/use-state 0)]
-    (uix/$ :div {...}
-      (uix/$ UIxButton {:on-click #(set-count! inc)} "Increment"))))
+    (uix/$ :div {}
+      (uix/$ :button {:onClick #(set-count! inc)} "+"))))
+```
+
+**重要ルール:**
+- ✅ **`defui` 内は常に `uix/$`**: UIx コンポーネント定義内はすべて uix/$ で統一
+- ✅ **異 framework コンポーネント参照も alias で明示**: `(helix/$ IslandA)` / `(uix/$ IslandC)`
+- ✅ **core.cljs は UIx 主軸**: メインアプリケーションを UIx で統一
+- ✅ **古い Helix 島は保持**: IslandA・B は現状維持、新規実装は UIx で統一可能
 
 ;; 参考：Helix での同等実装
 (defnc IslandB-Helix []
