@@ -305,6 +305,27 @@ npx shadow-cljs release app
 - UIx の `defui` マクロは正式コンポーネント定義に必須
 - 複数 roots の管理は atom ベースで容易に実装可能
 
+### 比較評価：Helix vs UIx
+
+**能力的には同等：Helix でできることは UIx でも実現可能**
+
+| 側面 | Helix | UIx |
+|------|-------|-----|
+| シンタックス | 関数型、React ネイティブ | Hiccup ベース、宣言的 |
+| state 管理 | use-state（React Hooks） | uix/use-state（同じく React Hooks） |
+| コンポーネント定義 | defnc（マクロ） | defui（マクロ） |
+| ホットリロード | ✅ | ✅ |
+| 複数 root 対応 | ✅ | ✅ |
+| Hiccup ネイティブ対応 | ✗ | ✅ |
+
+> **UIx を制御主軸に選出**
+> 
+> 技術的には両者は等価ですが、Islands アーキテクチャの統一性と Clojure ベース（Hiccup）のコンポーネント記法を理由に、
+> **UIx を制御主軸として採用する方針を決定**。
+> Helix は例示・比較用に並行維持。
+> 
+> **目的：設計統一と Clojure らしさの追求**
+
 ### 記録項目
 
 各フェーズで以下を記録：
