@@ -318,6 +318,71 @@ npx shadow-cljs release app
 - 複数 roots の管理は atom ベースで容易に実装可能
 - **UIx でも Helix 同等レベルの複雑なコンポーネント構成が実装可能**（Shadow-CLJS compile 成功）
 
+### 🔧 UIx × Helix 共存実装ガイド
+
+#### Namespace 設定（重要）
+```clojure
+;; 現在: Helix の $ がメイン（動作実績あり）
+;; 目標: UIx への段階的移行（新規 defui は UIx で記述）
+(ns my.app
+  (:require [helix.core :refer [defnc $]]
+            [helix.dom :as d]
+            [uix.core :as uix :refer [defui]]
+            [uix.dom]))
+```
+
+> **移行戦略**: 
+> - 既存の Helix コンポーネント（`defnc`）は `$` で実装継続
+> - 新規 UIx コンポーネント（`defui`）は `uix/$` で明示的に指定
+> - 段階的に UIx へ移行可能（フレームワーク選出は不要）
+
+#### UIx コンポーネント内での $ 使用
+UIx は主軸なので、`defui` マクロ内は **すべて `uix/$`** で統一：
+
+```clojure
+;; ✅ 正しい（UIx 主軸）：uix/$ を明示的に使用
+(defui UIxButton [{:keys [on-click children]}]
+  (uix/$ :button {:on-click on-click} children))
+
+;; Helix は互換用：defnc で定義し Helix $ を使用
+(defnc HelixButton [{:keys [on-click children]}]
+  ($ :button {:on-click on-click} children))
+```
+
+#### Island C（UIx）での実装例
+```clojure
+;; UIx が主軸：新規コンポーネント実装の基本
+(defui IslandC-UIxCardTest []
+  (let [[count set-count!] (uix/use-state 0)]
+    (uix/$ :div {...}
+      (uix/$ UIxButton {:on-click #(set-count! inc)} "Increment"))))
+
+;; 参考：Helix での同等実装
+(defnc IslandB-Helix []
+  (let [[count set-count] (use-state 0)]
+    ($ :div {}
+      ($ Button {:onClick #(set-count inc)} "Increment"))))
+```
+
+#### TailwindCSS 統合（UIxButton）
+```clojure
+(defui UIxButton [{:keys [variant on-click children]}]
+  (let [base-classes "inline-flex items-center..."
+        variant-classes (case variant
+                         "secondary" "bg-purple-600 hover:bg-purple-700"
+                         "default" "bg-blue-600 hover:bg-blue-700")]
+    (uix/$ :button 
+      {:className (str base-classes " " variant-classes)
+       :on-click on-click} 
+      children)))
+```
+
+**重要：**
+- props は destructuring で受け取る `[{:keys [...]}]` 形式
+- children は自動的に props マップに含まれる
+- `:on-click` は Hiccup では `:on-click`（`:onClick` ではない）
+- className は TailwindCSS クラス文字列を使用
+
 ### 比較評価：Helix vs UIx
 
 **能力的には同等：Helix でできることは UIx でも実現可能**
@@ -351,6 +416,27 @@ npx shadow-cljs release app
 > - 📐 設計統一：全 Island を UIx defui で統一可能
 > - 🔧 Clojure らしさ：Hiccup データ記述で関数型プログラミング体験向上
 > - 🎯 検証完了：UIx が Helix 同等の機能・複雑性対応を実装検証により確認
+
+### ⚠️ よくあるトラブルと解決方法（UIx 主軸）
+
+| 問題 | 原因 | 解決方法 |
+|------|------|--------|
+| UIx コンポーネント内の props が undefined | UIx 内で Helix の `$` を使用してしまう | `defui` マクロ内では必ず `uix/$` を明示的に使用 |
+| `:on-click` が null で渡される | $ マクロの混在（UIx 内で Helix $ を参照） | UIx コンポーネントは `uix/$` で完全統一 |
+| TailwindCSS クラスが反映されない | `:className` 属性が文字列でない | className は文字列形式で指定（`(str base-classes " " variant-classes)`） |
+| 子要素が React child として invalid | `children` をマップのままレンダリング | `children` は自動的に props に含まれるため、destructuring で正しく取得 |
+| ホットリロード時に state がリセット | component 参照の変更 | `defui` マクロを正しく使用し、component 参照を安定化 |
+| Helix コンポーネント内で UIx コンポーネントが動作しない | 異なる $ マクロで namespace 汚染 | Helix 内で UIx を使う場合も `uix/$` で明示的に指定 |
+
+### 実装チェックリスト（UIx 主軸開発）
+
+- [ ] `defui` で UIx コンポーネントを定義（新規コンポーネントはこれが基本）
+- [ ] UIx コンポーネント内では **すべて `uix/$`** で統一
+- [ ] props destructuring は `[{:keys [...]}]` 形式
+- [ ] Hiccup イベントハンドラは `:on-click`（React の `:onClick` ではなく）
+- [ ] TailwindCSS は className（文字列）で指定
+- [ ] 複数 state は `(uix/use-state)` で宣言
+- [ ] Helix コンポーネントを参照する場合は明示的に `$ HelixComponent` で指定
 
 ### 記録項目
 
