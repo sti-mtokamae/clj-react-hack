@@ -316,6 +316,7 @@ npx shadow-cljs release app
 ### リンク
 - **進捗追跡**: `/memories/session/uix-experiment.md`
 - **ブランチ**: `experiment/helix-uix-hybrid`
+- **関連ドキュメント**: [Islands アーキテクチャ：認証認可戦略](docs/islands-auth-strategy.md)
 
 ## 🎨 コンポーネント例
 
@@ -385,11 +386,14 @@ module.exports = {
 ```clojure
 ;; shadow-cljs.edn
 {:source-paths ["src"]
- :dependencies [[lilactown/helix "0.2.0"]]
+ :dependencies [[lilactown/helix "0.2.0"]
+               [com.pitch/uix.core "1.4.5"]
+               [com.pitch/uix.dom "1.4.5"]]
  :builds
  {:app
   {:target :browser
    :output-dir "public/js"
+   :asset-path "/js"
    :modules {:main {:init-fn clj-react-hack.core/render-app}}
    :devtools {:http-root "public" :http-port 3000}}}}
 ```
@@ -422,6 +426,7 @@ npx shadow-cljs compile test
 - [ClojureScript公式ドキュメント](https://clojurescript.org/)
 - [Shadow-CLJS ユーザーガイド](https://shadow-cljs.github.io/docs/UsersGuide.html)
 - [Helix ドキュメント](https://github.com/lilactown/helix)
+- [UIx ドキュメント](https://github.com/pitch-io/uix)
 - [React 19 ドキュメント](https://react.dev/)
 - [TailwindCSS ドキュメント](https://tailwindcss.com/docs)
 
