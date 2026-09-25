@@ -11,6 +11,11 @@
 > **Modern ClojureScript + React 19 Development Environment with Shadcn/ui Design System**  
 > モダンウェブアプリケーション開発のための完全統合環境
 
+単体の demo page として動かせるだけでなく、`#app` を用意した既存 HTML や
+server-rendered page に React root として埋め込めます。`clj-star-bridge` との
+統合では、Clojure/Hiccup が生成する page shell の内側へ、この application
+全体を 1 つの React root として mount します。
+
 ## ✨ 特徴
 
 ### 🎯 **技術スタック完全統合**
@@ -71,7 +76,7 @@ cd clj-react-hack
 ### 2. 依存関係のインストール
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 3. 開発サーバーの起動
@@ -81,13 +86,47 @@ npm install
 npx shadow-cljs watch app
 
 # 別のターミナルでTailwindCSSをwatchモードで起動
-./tailwindcss -i ./src/css/input.css -o ./public/output.css --watch
+npx tailwindcss -i ./src/css/input.css -o ./public/output.css --watch
 ```
 
 ### 4. ブラウザでアクセス
 
 - **アプリケーション**: http://localhost:3000
 - **Shadow-CLJSダッシュボード**: http://localhost:9630/dashboard
+
+## clj-star-bridge への組み込み
+
+[`clj-star-bridge`](https://github.com/sti-mtokamae/clj-star-bridge) は
+Clojure/Hiccup page shell、Datastar、SSE を担当し、このリポジトリは React
+application bundle を提供します。
+
+```text
+Clojure/Hiccup shell
+├── Datastar領域（通知、接続状態、サーバー主導UI）
+└── #app
+    └── clj-react-hack React root
+```
+
+`render-app` は page 内の `#app` を探し、存在する場合だけ `createRoot` で
+`MainContent` を mount します。このため `public/index.html` から単体起動する場合と、
+Hiccup page から bundle を読み込む場合で、ClojureScript entry pointを変更する
+必要はありません。
+
+DOM の所有権は分離します。
+
+- React は `#app` の内側だけを更新する。
+- Datastar は `#app` の内側を patch しない。
+- Hiccup shell 側では React mount point を `data-ignore-morph` で保護する。
+- 一斉通知など shell 共通の UI は React root の外側へ配置する。
+
+最初の統合では、この demo application 全体を 1 つの React root として収容する
+ことを確認済みです。これは既存 React SPA を直ちに分解するものではなく、既存の
+routing、state、API client を保ったまま server-side shell を導入する移行入口です。
+その後、必要性が確認できたページから Hiccup/Datastar とページ固有 React
+component へ責任を分けます。
+
+WSLc を使った2リポジトリの起動手順は、`clj-star-bridge` の
+`containers/clj-dev/BUILD.md` を参照してください。
 
 ## 📁 プロジェクト構造
 
@@ -168,7 +207,7 @@ npx shadow-cljs compile app
 npx shadow-cljs release app
 
 # TailwindCSS本番ビルド
-./tailwindcss -i ./src/css/input.css -o ./public/output.css --minify
+npx tailwindcss -i ./src/css/input.css -o ./public/output.css --minify
 ```
 
 ## 🎯 アーキテクチャ
@@ -207,15 +246,17 @@ npx shadow-cljs release app
 
 > **注**: Helix と UIx は異なるマクロ（`defnc` vs `defui`）を使用しますが、**両者とも同じ React Hooks API** を活用します。`use-state` の参照方法が異なる点（`use-state` vs `uix/use-state`）に注意してください。
 
-### Islands アーキテクチャ戦略
+### Component 分割戦略
 
-このプロジェクトでは **複数の独立した React islands** を採用しています：
+現在の実装は、`#app` に作成した **1つの React root** の下へ Island A・B・C を
+component として配置しています。各 component は独立したローカル state を持ちますが、
+複数 root や個別 bundle を使う厳密な Islands architecture ではありません。
 
-**Island アプローチのメリット:**
-- 各Islandは完全に独立した React root を持つ
-- 異なるフレームワーク（Helix ↔ UIx）の混在が可能
-- 各Islandが独自の state を管理（`use-state` / `uix/use-state`）
-- 必要に応じて Clojure atoms 経由で state を共有可能
+**現在確認できていること:**
+- Helix と UIx の component を同じ React root で混在できる
+- 各 component が独自の state を管理できる（`use-state` / `uix/use-state`）
+- component を別 namespace・別ファイルへ分割できる
+- 必要に応じて Clojure atoms 経由で state を共有できる
 
 **実装例:**
 ```clojure
@@ -235,40 +276,15 @@ npx shadow-cljs release app
 ;; @shared-state で読み取り、reset! で更新
 ```
 
-> **本プロジェクトの現状**: Island A・B・C は各々独立した state を持っており、atom による共有は実装していません。必要に応じてこの戦略は拡張可能です。
+> **本プロジェクトの現状**: Island A・B・C は同じ React root の配下にあり、
+> 各々独立した state を持っています。atom による共有は実装していません。
 
-#### スケーラビリティ戦略：モジュール肥大化の回避
+#### 将来、複数 root に分ける場合
 
-**従来の SPA との違い:**
-
-| 側面 | 単一 SPA | Islands アーキテクチャ |
-|------|---------|----------------|
-| **バンドル構成** | 1つの大きな JavaScript | 複数の独立したモジュール |
-| **初期読み込み** | 全機能をロード（成長とともに肥大化） | 必要な Island のみロード |
-| **段階的成長** | 機能追加 → バンドル全体が肥大化 | 機能追加 → 新しい Island として追加 |
-| **コード分割** | 可能だが複雑 | 各 Island が自然に分割 |
-| **技術的負債** | モノリシック化しやすい | Islandごとに孤立 |
-| **チーム開発** | 全員で1つのコードベース | 各Islandを別チームが開発可能 |
-
-**実現可能な最適化:**
-
-1. **遅延読み込み（Lazy Loading）**:
-   ```clojure
-   ;; Island A: 初期ロード
-   ;; Island B: ユーザー操作後に動的読み込み
-   ;; Island C: 必要に応じて読み込み
-   ```
-
-2. **フレームワーク最適化**:
-   - 各 Island が必要なフレームワークのみ含む
-   - 全Islandが Helix を必須としない設計も可能
-
-3. **段階的拡張**:
-   - v1.0: 2-3 Islands で最小構成
-   - v2.0: 新機能を新しい Island として追加
-   - 既存 Islands への影響なし
-
-> **本戦略の効果**: Shadow-CLJS のモジュール分割 + Islands アプローチで、**SPA の肥大化課題を構造的に回避できます**。
+将来、ページ内に複数の独立 React root を置く場合は、Hiccup 側で mount point を
+複数出力し、component 名や初期 props を data 属性で渡します。その時点で初めて、
+root 単位の mount、遅延読み込み、Shadow-CLJS module 分割の必要性を評価します。
+現在の PoC では導入していません。
 
 ## 🔬 UIx ハイブリッド実験（進行中）
 
@@ -277,9 +293,9 @@ npx shadow-cljs release app
 このセクションでは **Helix と UIx の混在アプローチ** を段階的に検証しています。
 
 #### 背景
-- 複数の React islands をシェアド atom で繋ぐ場合、コンポーネント記法の統一が有用か検証
+- 同一 React root 内の複数 component を shared atom で繋ぐ場合、コンポーネント記法の統一が有用か検証
 - Hiccup ベース（UIx）と React 関数型（Helix）の共存は実用的か評価
-- 最終的に `clj-star-bridge` + `clj-react-hack` の monorepo 統合の下準備
+- `clj-star-bridge` からbundleを読み込むための統合境界を検証
 
 #### 仮説
 1. UIx コンポーネント定義と Helix コンポーネント定義は共存可能
@@ -290,10 +306,10 @@ npx shadow-cljs release app
 
 | フェーズ | 対象 | 状態 | 目標 |
 |---------|------|------|------|
-| **Phase 1** | README + Memory | ✅ 完了 | 実験目的・進捗の記録、islands表現統一 |
+| **Phase 1** | README + Memory | ✅ 完了 | 実験目的・進捗の記録、component 表現統一 |
 | **Phase 2** | shadow-cljs.edn | ✅ 完了 | UIx 依存を追加 |
 | **Phase 3** | UIx コンポーネント実装 | ✅ 完了 | Island C で defui + uix/use-state 実装 |
-| **Phase 4** | 複数 islands 統合 | ✅ 完了 | Helix + UIx ハイブリッド構成で動作検証 |
+| **Phase 4** | 複数 component 統合 | ✅ 完了 | Helix + UIx ハイブリッド構成で動作検証 |
 | **Phase 5** | UI デモ復帰 | ✅ 完了 | shadcn/ui + TailwindCSS ボタンテスト復帰 |
 | **Phase 6** | ドキュメント化・検証完全化 | ✅ 完了 | 知見の集約・実装結果の記録・UIx 検証完全化 |
 | **Phase 7** | コンポーネント分割・alias 規範化 | ✅ 完了 | Island ファイル化、namespace alias 明示化、保守性向上 |
@@ -301,8 +317,8 @@ npx shadow-cljs release app
 ### 検証結果
 
 ✅ **UIx は Helix と共存可能**
-- 同一アプリケーション内で両方のコンポーネント定義が機能
-- `uix.dom/create-root` + `uix.dom/render-root` API を使用
+- 同一application、同一React root内で両方のcomponent定義が機能
+- `react-dom/client` の `createRoot` 配下で Helix と UIx component をrender
 - フラグメント記法は Helix の `($ :<> ...)` ではなく通常の div で対応
 
 ✅ **ホットリロード対応**
